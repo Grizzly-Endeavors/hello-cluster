@@ -1,0 +1,80 @@
+name: Build and Deploy
+
+# Push to main:
+#   1. Build the container image from the root Dockerfile
+#   2. Push to GHCR with the commit SHA as the tag
+#   3. Bump image.tag in deploy/values.yaml and commit back with [skip ci]
+#   4. Flux sees the change and reconciles the app within ~1 minute
+#
+# Customize as needed for your app (build args, test steps, caching, etc).
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'deploy/values.yaml'   # tag-bump commit shouldn't re-trigger a build
+      - '**.md'
+      - '.github/**'
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set lowercase repo name
+        id: repo
+        run: echo "name=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ steps.repo.outputs.name }}:${{ github.sha }}
+            ghcr.io/${{ steps.repo.outputs.name }}:latest
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Bump image tag in deploy/values.yaml
+        env:
+          SHA: ${{ github.sha }}
+          REPO_LOWER: ${{ steps.repo.outputs.name }}
+        run: |
+          set -euo pipefail
+          yq -i ".image.repository = \"ghcr.io/${REPO_LOWER}\"" deploy/values.yaml
+          yq -i ".image.tag = strenv(SHA)" deploy/values.yaml
+          echo "Updated deploy/values.yaml:"
+          yq '.image' deploy/values.yaml
+
+      - name: Commit tag bump
+        run: |
+          set -euo pipefail
+          if git diff --quiet deploy/values.yaml; then
+            echo "No tag change (already at this SHA), skipping commit"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/values.yaml
+          git commit -m "chore(deploy): bump image tag to ${GITHUB_SHA:0:7} [skip ci]"
+          git push

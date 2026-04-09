@@ -1,0 +1,47 @@
+# App deployment values. CI bumps `image.tag` on push to main.
+# See ADR-020 for the delivery model.
+
+image:
+  # Defaults to a public nginx image so a freshly-created repo from this
+  # template runs end-to-end with no changes. Update to your own image
+  # (typically ghcr.io/grizzly-endeavors/<repo>) and the deploy.yaml
+  # workflow will bump the tag automatically on each push to main.
+  repository: nginx
+  tag: "1.25-alpine"
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  host: ""
+  tls: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# Environment variables to inject into the container
+env: []
+# - name: EXAMPLE
+#   value: "hello"
+
+# Optional: probes (set path to your app's health endpoint)
+probes:
+  liveness:
+    enabled: false
+    path: /healthz
+  readiness:
+    enabled: false
+    path: /healthz

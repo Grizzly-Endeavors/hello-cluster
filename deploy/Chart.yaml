@@ -1,0 +1,6 @@
+apiVersion: v2
+name: app
+description: App deployed to the grizzly-endeavors homelab K8s cluster
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

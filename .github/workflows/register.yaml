@@ -1,0 +1,45 @@
+name: Register with Flux
+
+# One-time registration workflow. Run this once from the Actions tab
+# (workflow_dispatch) after creating a new repo from this template.
+# It calls the reusable register-app.yaml workflow in lab-iac, which
+# opens an auto-merging PR adding this app to kubernetes/apps/.
+#
+# After the onboarding PR merges, Flux starts reconciling this repo's
+# deploy/ dir within ~1 minute. From then on, every push to main is
+# picked up automatically — no further manual steps.
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: "Short name for the app (DNS-1123: lowercase alphanumeric with hyphens)"
+        required: true
+        type: string
+      namespace:
+        description: "Kubernetes namespace (DNS-1123)"
+        required: true
+        type: string
+      ingress_host:
+        description: "Ingress hostname (optional)"
+        required: false
+        type: string
+        default: ""
+      auto_merge:
+        description: "Auto-merge the onboarding PR on lab-iac"
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  register:
+    uses: grizzly-endeavors/lab-iac/.github/workflows/register-app.yaml@master
+    with:
+      app_name: ${{ inputs.app_name }}
+      repo_full_name: ${{ github.repository }}
+      deploy_path: "./deploy"
+      namespace: ${{ inputs.namespace }}
+      auto_merge: ${{ inputs.auto_merge }}
+    secrets:
+      FLUX_OPS_APP_ID: ${{ secrets.FLUX_OPS_APP_ID }}
+      FLUX_OPS_APP_PRIVATE_KEY: ${{ secrets.FLUX_OPS_APP_PRIVATE_KEY }}
