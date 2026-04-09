@@ -7,7 +7,7 @@ image:
   # (typically ghcr.io/grizzly-endeavors/<repo>) and the deploy.yaml
   # workflow will bump the tag automatically on each push to main.
   repository: ghcr.io/grizzly-endeavors/hello-cluster
-  tag: "a1e1f9a9256afa34db3ece6ec4d9973783fb9d18"
+  tag: "f6cef3e42c94c54b23c0a30d038d89353cab2bd2"
   pullPolicy: IfNotPresent
 replicaCount: 1
 service:
