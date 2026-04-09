@@ -6,24 +6,20 @@ image:
   # template runs end-to-end with no changes. Update to your own image
   # (typically ghcr.io/grizzly-endeavors/<repo>) and the deploy.yaml
   # workflow will bump the tag automatically on each push to main.
-  repository: nginx
-  tag: "1.25-alpine"
+  repository: ghcr.io/grizzly-endeavors/hello-cluster
+  tag: "a1e1f9a9256afa34db3ece6ec4d9973783fb9d18"
   pullPolicy: IfNotPresent
-
 replicaCount: 1
-
 service:
   type: ClusterIP
   port: 80
   targetPort: 80
-
 ingress:
   enabled: false
   className: nginx
   annotations: {}
   host: ""
   tls: false
-
 resources:
   requests:
     cpu: 50m
@@ -31,7 +27,6 @@ resources:
   limits:
     cpu: 500m
     memory: 256Mi
-
 # Environment variables to inject into the container
 env: []
 # - name: EXAMPLE
