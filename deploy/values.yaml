@@ -6,8 +6,8 @@ image:
   # template runs end-to-end with no changes. Update to your own image
   # (typically ghcr.io/grizzly-endeavors/<repo>) and the deploy.yaml
   # workflow will bump the tag automatically on each push to main.
-  repository: ghcr.io/grizzly-endeavors/hello-cluster
-  tag: "f6cef3e42c94c54b23c0a30d038d89353cab2bd2"
+  repository: nginx
+  tag: "1.25-alpine"
   pullPolicy: IfNotPresent
 replicaCount: 1
 service:
